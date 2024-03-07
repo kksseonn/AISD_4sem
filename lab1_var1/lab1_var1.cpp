@@ -47,11 +47,23 @@ class BinarySearchTree {
 		}
 	}
 
+	void deleteTree(Node* root) {
+		if (root != nullptr) { 
+			deleteTree(root->left);
+			deleteTree(root->right);
+			delete root;
+		}
+	}
+
 public:
 	BinarySearchTree() : root(nullptr) {}
 
 	BinarySearchTree(const BinarySearchTree& other) {
 		root = copyTree(other.root);
+	}
+
+	~BinarySearchTree() {
+		deleteTree(root);
 	}
 
 	void insert(int key) {
@@ -61,6 +73,7 @@ public:
 	bool contains(int key) {
 		return contains(root, key);
 	}
+
 };
 
 int main() {
