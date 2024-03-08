@@ -36,6 +36,29 @@ class BinarySearchTree {
 		return node;
 	}
 
+	Node* erase(Node* root, int key) {
+		if (root == nullptr)
+			return nullptr;
+		if (key < root->data)
+			root->left = erase(root->left, key);
+		else if (key > root->data)
+			root->right = erase(root->right, key);
+		else {
+			if (root->left == nullptr) {
+				Node* temp = root->right;
+				delete root;
+				return temp;
+			}
+			else if (root->right == nullptr) {
+				Node* temp = root->left;
+				delete root;
+				return temp;
+			}
+			//sort after change? minvalue?
+		}
+		return root;
+	}
+
 	bool contains(Node* node, int key) {
 		if (node == nullptr) {
 			return false;
@@ -57,6 +80,14 @@ class BinarySearchTree {
 			deleteTree(root->right);
 			delete root;
 		}
+	}
+
+	void print(Node* node) {
+		if (node == nullptr)
+			return;
+		print(node->left);
+		std::cout << node->data << " ";
+		print(node->right);
 	}
 
 public:
@@ -85,6 +116,11 @@ public:
 	bool contains(int key) {
 		return contains(root, key);
 	}
+
+	void print() {
+		print(root);
+		std::cout << std::endl;
+	}
 };
 
 int main() {
@@ -97,6 +133,9 @@ int main() {
 	set.insert(6);
 	set.insert(8);
 
+	std::cout << "Tree contents: ";
+	set.print();
+
 	std::cout << "Contains 3: " << std::boolalpha << set.contains(3) << std::endl;
 	std::cout << "Contains 9: " << std::boolalpha << set.contains(9) << std::endl;
 
@@ -104,6 +143,8 @@ int main() {
 	set2 = set;
 
 	std::cout << "After assignment:" << std::endl;
+	std::cout << "Tree contents: ";
+	set2.print();
 	std::cout << "Contains 3 in set2: " << std::boolalpha << set2.contains(3) << std::endl;
 	std::cout << "Contains 9 in set2: " << std::boolalpha << set2.contains(9) << std::endl;
 
