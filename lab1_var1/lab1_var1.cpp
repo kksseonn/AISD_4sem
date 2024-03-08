@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdexcept>
 
 class BinarySearchTree {
 	struct Node {
@@ -29,6 +30,9 @@ class BinarySearchTree {
 		else if (key > node->data) {
 			node->right = insert(node->right, key);
 		}
+		else {
+			throw std::invalid_argument("Key already exists in the tree");
+		}
 		return node;
 	}
 
@@ -48,7 +52,7 @@ class BinarySearchTree {
 	}
 
 	void deleteTree(Node* root) {
-		if (root != nullptr) { 
+		if (root != nullptr) {
 			deleteTree(root->left);
 			deleteTree(root->right);
 			delete root;
@@ -66,6 +70,14 @@ public:
 		deleteTree(root);
 	}
 
+	BinarySearchTree& operator=(const BinarySearchTree& other) {
+		if (this != &other) {
+			deleteTree(root);
+			root = copyTree(other.root);
+		}
+		return *this;
+	}
+
 	void insert(int key) {
 		root = insert(root, key);
 	}
@@ -73,7 +85,6 @@ public:
 	bool contains(int key) {
 		return contains(root, key);
 	}
-
 };
 
 int main() {
@@ -88,6 +99,13 @@ int main() {
 
 	std::cout << "Contains 3: " << std::boolalpha << set.contains(3) << std::endl;
 	std::cout << "Contains 9: " << std::boolalpha << set.contains(9) << std::endl;
+
+	BinarySearchTree set2;
+	set2 = set;
+
+	std::cout << "After assignment:" << std::endl;
+	std::cout << "Contains 3 in set2: " << std::boolalpha << set2.contains(3) << std::endl;
+	std::cout << "Contains 9 in set2: " << std::boolalpha << set2.contains(9) << std::endl;
 
 	return 0;
 }
