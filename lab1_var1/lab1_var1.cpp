@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 
+
 class BinarySearchTree {
 	struct Node {
 		int data;
@@ -31,7 +32,7 @@ class BinarySearchTree {
 			node->right = insert(node->right, key);
 		}
 		else {
-			throw std::invalid_argument("Key already exists in the tree");
+			return node;
 		}
 		return node;
 	}
@@ -54,9 +55,18 @@ class BinarySearchTree {
 				delete root;
 				return temp;
 			}
-			//sort after change? minvalue?
+			Node* temp = minValueNode(root->right);
+			root->data = temp->data;
+			root->right = erase(root->right, temp->data);
 		}
 		return root;
+	}
+
+	Node* minValueNode(Node* node) {
+		Node* current = node;
+		while (current && current->left != nullptr)
+			current = current->left;
+		return current;
 	}
 
 	bool contains(Node* node, int key) {
@@ -109,12 +119,24 @@ public:
 		return *this;
 	}
 
-	void insert(int key) {
-		root = insert(root, key);
+	bool insert(int key) {
+		if (!contains(key)) {
+			root = insert(root, key);
+			return true;
+		}
+		return false;
 	}
 
 	bool contains(int key) {
 		return contains(root, key);
+	}
+
+	bool erase(int key) {
+		if (contains(key)) {
+			root = erase(root, key);
+			return true;
+		}
+		return false;
 	}
 
 	void print() {
@@ -124,29 +146,40 @@ public:
 };
 
 int main() {
-	BinarySearchTree set;
-	set.insert(5);
-	set.insert(3);
-	set.insert(7);
-	set.insert(2);
-	set.insert(4);
-	set.insert(6);
-	set.insert(8);
+	BinarySearchTree set1;
+
+	set1.insert(5);
+	set1.insert(3);
+	set1.insert(7);
+	set1.insert(2);
+	set1.insert(4);
+	set1.insert(6);
+	set1.insert(8);
 
 	std::cout << "Tree contents: ";
-	set.print();
+	set1.print();
 
-	std::cout << "Contains 3: " << std::boolalpha << set.contains(3) << std::endl;
-	std::cout << "Contains 9: " << std::boolalpha << set.contains(9) << std::endl;
+	std::cout << "Contains 3: " << std::boolalpha << set1.contains(3) << std::endl;
+	std::cout << "Contains 9: " << std::boolalpha << set1.contains(9) << std::endl;
 
-	BinarySearchTree set2;
-	set2 = set;
-
-	std::cout << "After assignment:" << std::endl;
-	std::cout << "Tree contents: ";
+	BinarySearchTree set2(set1);
+	std::cout << "copyTree contents: ";
 	set2.print();
-	std::cout << "Contains 3 in set2: " << std::boolalpha << set2.contains(3) << std::endl;
-	std::cout << "Contains 9 in set2: " << std::boolalpha << set2.contains(9) << std::endl;
+	BinarySearchTree set3 = set1;
+	std::cout << "Tree_3 = Tree_1 contents: ";
+	set3.print();
+
+	set1.erase(3);
+
+	std::cout << "After erasing 3:" << std::endl;
+	std::cout << "Tree contents: ";
+	set1.print();
+	std::cout << "Contains 3: " << std::boolalpha << set1.contains(3) << std::endl;
+
+	set2 = set1;
+
+	std::cout << "Tree contents of set2 after assignment: ";
+	set2.print();
 
 	return 0;
 }
