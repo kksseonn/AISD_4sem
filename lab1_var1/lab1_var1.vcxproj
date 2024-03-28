@@ -127,7 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="lab1_var1.cpp" />
+    <ClCompile Include="BinarySearchTree.cpp" />
+    <ClCompile Include="Tasks.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BinarySearchTree.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
