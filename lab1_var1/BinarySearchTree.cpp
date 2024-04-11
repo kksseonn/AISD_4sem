@@ -19,16 +19,6 @@ BinarySearchTree::Node* BinarySearchTree::minValueNode(Node* node) {
 	return current;
 }
 
-BinarySearchTree::Node* BinarySearchTree::searchRecursive(Node* node, int key) {
-	if (node == nullptr || node->data == key)
-		return root;
-
-	if (node->data < key)
-		return searchRecursive(node->right, key);
-
-	return searchRecursive(node->left, key);
-}
-
 void BinarySearchTree::eraseRecursive(Node*& node, const int key) {
 	if (!node) {
 		return;
@@ -88,12 +78,6 @@ bool BinarySearchTree::containsRecursive(Node* node, const int key) const {
 		return false;
 }
 
-int BinarySearchTree::countRecursive(Node* node) {
-	if (!node)
-		return 0;
-	return countRecursive(node->right) + countRecursive(node->left) + 1;
-}
-
 BinarySearchTree::BinarySearchTree() : root(nullptr) {}
 
 BinarySearchTree::BinarySearchTree(const BinarySearchTree& other) {
@@ -111,6 +95,8 @@ BinarySearchTree& BinarySearchTree::operator=(const BinarySearchTree& other) {
 	}
 	return *this;
 }
+
+BinarySearchTree::Node* BinarySearchTree::getRoot() const { return root; }
 
 void BinarySearchTree::print() const {
 	std::cout << "Tree: " << std::endl;
@@ -155,10 +141,5 @@ bool BinarySearchTree::erase(int key) {
 		eraseRecursive(root, key);
 		return true;
 	}
-	return false;
-}
-
-bool BinarySearchTree::search(int key) {
-	if (searchRecursive(root, key)) return true;
 	return false;
 }
