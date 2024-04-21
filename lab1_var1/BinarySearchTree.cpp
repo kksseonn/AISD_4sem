@@ -78,6 +78,14 @@ bool BinarySearchTree::containsRecursive(Node* node, const int key) const {
 		return false;
 }
 
+void BinarySearchTree::fillVector(Node* node, std::vector<int>& result) const {
+	if (node) {
+		fillVector(node->left, result);
+		result.push_back(node->data);    
+		fillVector(node->right, result); 
+	}
+}
+
 BinarySearchTree::BinarySearchTree() : root(nullptr) {}
 
 BinarySearchTree::BinarySearchTree(const BinarySearchTree& other) {
@@ -96,7 +104,11 @@ BinarySearchTree& BinarySearchTree::operator=(const BinarySearchTree& other) {
 	return *this;
 }
 
-BinarySearchTree::Node* BinarySearchTree::getRoot() const { return root; }
+std::vector<int> BinarySearchTree::treeToVector() const {
+	std::vector<int> result;
+	fillVector(root, result);
+	return result;
+}
 
 void BinarySearchTree::print() const {
 	std::cout << "Tree: " << std::endl;

@@ -1,5 +1,8 @@
 #pragma once
 #include <iomanip>
+#include <vector>
+
+
 class BinarySearchTree {
 	struct Node {
 		int data;
@@ -15,7 +18,7 @@ class BinarySearchTree {
 	void destroyRecursive(Node* node);
 	void printRecursive(Node* node, const std::string& prefix = "", bool isLeft = true) const;
 	bool containsRecursive(Node* node, const int key) const;
-	void fillVector(Node* node, std::vector<int>& result);
+	void fillVector(Node* node, std::vector<int>& result) const;
 
 public:
 	BinarySearchTree();
@@ -23,6 +26,8 @@ public:
 	~BinarySearchTree();
 
 	BinarySearchTree& operator=(const BinarySearchTree& other);
+
+	std::vector<int> treeToVector() const;
 
 	void print() const;
 	bool insert(int key);
