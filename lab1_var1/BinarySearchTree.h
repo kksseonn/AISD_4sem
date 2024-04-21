@@ -15,17 +15,18 @@ class BinarySearchTree {
 	void destroyRecursive(Node* node);
 	void printRecursive(Node* node, const std::string& prefix = "", bool isLeft = true) const;
 	bool containsRecursive(Node* node, const int key) const;
+	void fillVector(Node* node, std::vector<int>& result);
 
 public:
 	BinarySearchTree();
 	BinarySearchTree(const BinarySearchTree& other);
 	~BinarySearchTree();
-	BinarySearchTree& operator=(const BinarySearchTree& other);
 
-	Node* getRoot() const;
+	BinarySearchTree& operator=(const BinarySearchTree& other);
 
 	void print() const;
 	bool insert(int key);
 	bool contains(int key) const;
 	bool erase(int key);
+	
 };
