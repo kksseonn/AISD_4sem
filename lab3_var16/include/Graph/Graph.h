@@ -1,6 +1,4 @@
 ﻿#pragma once
-#include <vector>
-#include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
 #include <stdexcept>
@@ -8,7 +6,7 @@
 
 template<typename Vertex, typename Distance = double>
 class Graph {
-    
+
 public:
     struct Edge {
         Vertex from, to;
@@ -51,13 +49,62 @@ public:
     }
 
 
-    ////проверка-добавление-удаление ребер
-    //void add_edge(const Vertex& from, const Vertex& to, const Distance& d);
-    //bool remove_edge(const Vertex& from, const Vertex& to);
-    //bool remove_edge(const Edge& e); //c учетом расстояния
-    //bool has_edge(const Vertex& from, const Vertex& to) const;
-    //bool has_edge(const Edge& e) const; //c учетом расстояния в Edge
+    //проверка-добавление-удаление ребер
+    void add_edge(const Vertex& from, const Vertex& to, const Distance& d) {
+        if (!has_vertex(from) || !has_vertex(to)) {
+            throw std::invalid_argument("Vertex does not exist in the graph");
+        }
+        if (has_edge(from, to)) {
+            throw std::invalid_argument("Edge already exists in the graph");
+        }
+        _edges[from].push_back({ from, to, d });
+    }
 
+    bool remove_edge(const Vertex& from, const Vertex& to) {
+        if (!has_vertex(from) || !has_vertex(to)) {
+            return false;
+        }
+        auto& edges = _edges[from];
+        auto it = std::remove_if(edges.begin(), edges.end(), [&](const Edge& e) {
+            return e.to == to;
+            });
+        if (it == edges.end()) {
+            return false;
+        }
+        edges.erase(it, edges.end());
+        return true;
+    }
+
+    bool remove_edge(const Edge& e) {
+        if (!has_vertex(e.from) || !has_vertex(e.to))
+            return false;
+        auto& list = _edges[e.from];
+        auto it = std::find(list.begin(), list.end(), e);
+        if (it != list.end()) {
+            list.erase(it);
+            return true;
+        }
+        return false;
+    }
+
+    bool has_edge(const Vertex& from, const Vertex& to) const {
+        if (!has_vertex(from) || !has_vertex(to)) {
+            return false;
+        }
+        const auto& edges = _edges.at(from);
+        return std::find_if(edges.begin(), edges.end(), [&](const Edge& e) {
+            return e.to == to;
+            }) != edges.end();
+    }
+
+    bool has_edge(const Edge& e) const {
+        if (!has_vertex(e.from) || !has_vertex(e.to)) {
+            return false;
+        }
+        const auto& edges = _edges.at(e.from);
+        return std::find(edges.begin(), edges.end(), e) != edges.end();
+    }
+};
     ////получение всех ребер, выходящих из вершины
     //std::vector<Edge> edges(const Vertex& vertex);
 
@@ -70,4 +117,4 @@ public:
     //    const Vertex& to) const;
     ////обход
     //std::vector<Vertex>  walk(const Vertex& start_vertex)const;
-};
+
