@@ -2,16 +2,25 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <stdexcept>
+#include <set>
+#include <stack>
+#include <vector>
+#include <limits>
+#include <algorithm>
 
 
 template<typename Vertex, typename Distance = double>
 class Graph {
-
 public:
     struct Edge {
         Vertex from, to;
         Distance distance;
+
+        bool operator==(const Edge& other) const {
+            return from == other.from && to == other.to && distance == other.distance;
+        }
     };
+
 private:
     std::unordered_set<Vertex> _vertices;
     std::unordered_map<Vertex, std::vector<Edge>> _edges;
@@ -23,7 +32,6 @@ private:
         return _edges[vertex];
     }
 public:
-    // проверка-добавление-удаление вершин
     bool has_vertex(const Vertex& v) const {
         return _vertices.find(v) != _vertices.end();
     }
@@ -44,14 +52,12 @@ public:
         for (auto& pair : _edges) {
             auto& edges = pair.second;
             edges.erase(std::remove_if(edges.begin(), edges.end(), [&](const Edge& e) {
-                return e.to == v || e.from == v;
+                return e.to == v;
                 }), edges.end());
         }
-
         return true;
     }
 
-    //проверка-добавление-удаление ребер
     void add_edge(const Vertex& from, const Vertex& to, const Distance& d) {
         if (!has_vertex(from) || !has_vertex(to)) {
             throw std::invalid_argument("Vertex does not exist in the graph");
@@ -106,9 +112,11 @@ public:
         const auto& edges = _edges.at(e.from);
         return std::find(edges.begin(), edges.end(), e) != edges.end();
     }
+
     size_t order() const {
         return _vertices.size();
     }
+
     size_t degree(const Vertex& v) const {
         if (!has_vertex(v)) {
             throw std::invalid_argument("Vertex does not exist in the graph");
@@ -123,11 +131,81 @@ public:
         }
         return degree;
     }
-};
-    
-    ////поиск кратчайшего пути
-    //std::vector<Edge> shortest_path(const Vertex& from,
-    //    const Vertex& to) const;
-    ////обход
-    //std::vector<Vertex>  walk(const Vertex& start_vertex)const;
 
+    std::vector<Edge> shortest_path(const Vertex& from, const Vertex& to) const {
+        if (!has_vertex(from) || !has_vertex(to)) {
+            throw std::invalid_argument("Vertex does not exist in the graph");
+        }
+
+        std::unordered_map<Vertex, Distance> distance;
+        std::unordered_map<Vertex, Vertex> predecessor;
+        std::set<std::pair<Distance, Vertex>> pq;
+
+        for (const Vertex& v : _vertices) {
+            distance[v] = std::numeric_limits<Distance>::infinity();
+        }
+
+        distance[from] = Distance(); // начальное расстояние равно 0
+        pq.insert({ Distance(), from });
+
+        while (!pq.empty()) {
+            Vertex u = pq.begin()->second;
+            pq.erase(pq.begin());
+
+            for (const Edge& e : _edges.at(u)) {
+                Vertex v = e.to;
+                Distance weight = e.distance;
+                if (distance[u] + weight < distance[v]) {
+                    pq.erase({ distance[v], v });
+                    distance[v] = distance[u] + weight;
+                    predecessor[v] = u;
+                    pq.insert({ distance[v], v });
+                }
+            }
+        }
+
+        std::vector<Edge> path;
+        if (distance[to] == std::numeric_limits<Distance>::infinity()) {
+            return path; // Нет пути до вершины `to`
+        }
+
+        for (Vertex at = to; at != from; at = predecessor[at]) {
+            Vertex pred = predecessor[at];
+            auto it = std::find_if(_edges.at(pred).begin(), _edges.at(pred).end(), [&at](const Edge& e) {
+                return e.to == at;
+                });
+            if (it != _edges.at(pred).end()) {
+                path.push_back(*it);
+            }
+        }
+        std::reverse(path.begin(), path.end());
+        return path;
+    }
+
+    std::vector<Vertex> walk(const Vertex& start_vertex) const {
+        if (!has_vertex(start_vertex)) {
+            throw std::invalid_argument("Start vertex does not exist in the graph");
+        }
+
+        std::unordered_set<Vertex> visited;
+        std::stack<Vertex> stack;
+        std::vector<Vertex> result;
+
+        stack.push(start_vertex);
+        visited.insert(start_vertex);
+
+        while (!stack.empty()) {
+            Vertex current = stack.top();
+            stack.pop();
+            result.push_back(current);
+
+            for (const auto& edge : _edges.at(current)) {
+                if (visited.find(edge.to) == visited.end()) {
+                    visited.insert(edge.to);
+                    stack.push(edge.to);
+                }
+            }
+        }
+        return result;
+    }
+};
