@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
+#include <unordered_set>
 #include <stdexcept>
 
 
@@ -14,26 +15,28 @@ public:
         Distance distance;
     };
 private:
-    std::unordered_map<Vertex, std::vector<Edge>> adjacency_list;
+    std::unordered_set<Vertex> _vertices;
+    std::unordered_map<Vertex, std::vector<Edge>> _edges;
 public:
     // проверка-добавление-удаление вершин
     bool has_vertex(const Vertex& v) const {
-        return adjacency_list.find(v) != adjacency_list.end();
+        return _vertices.find(v) != _vertices.end();
     }
 
     void add_vertex(const Vertex& v) {
         if (has_vertex(v)) {
             throw std::invalid_argument("Vertex already exists in the graph");
         }
-        adjacency_list[v] = std::vector<Edge>();
+        _vertices.insert(v);
+        _edges[v] = std::vector<Edge>();
     }
 
     bool remove_vertex(const Vertex& v) {
         if (!has_vertex(v)) return false;
 
-        adjacency_list.erase(v);
-
-        for (auto& pair : adjacency_list) {
+        _vertices.erase(v);
+        _edges.erase(v);
+        for (auto& pair : _edges) {
             auto& edges = pair.second;
             edges.erase(std::remove_if(edges.begin(), edges.end(), [&](const Edge& e) {
                 return e.to == v || e.from == v;
@@ -43,7 +46,9 @@ public:
         return true;
     }
 
-    //std::vector<Vertex> vertices() const;
+    std::vector<Vertex> vertices() const {
+        return std::vector<Vertex>(_vertices.begin(), _vertices.end());
+    }
 
 
     ////проверка-добавление-удаление ребер

@@ -15,7 +15,7 @@ TEST(GraphTest, AddVertex) {
     g.add_vertex(1);
 
     EXPECT_TRUE(g.has_vertex(1));
-    EXPECT_THROW(g.add_vertex(1), std::invalid_argument); 
+    EXPECT_THROW(g.add_vertex(1), std::invalid_argument);
 }
 
 TEST(GraphTest, RemoveVertex) {
