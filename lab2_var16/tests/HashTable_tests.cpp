@@ -2,12 +2,10 @@
 #include <gtest/gtest.h>
 
 TEST(HashTableTest, ConstructorTest) {
-    std::vector<std::pair<int, std::string>> values = { {1, "One"}, {2, "Two"}, {3, "Three"} };
-    HashTable<int, std::string> hash(5, values);
-
-    ASSERT_TRUE(hash.contains(1));
-    ASSERT_TRUE(hash.contains(2));
-    ASSERT_TRUE(hash.contains(3));
+    HashTable<int, std::string> hash(5);
+    ASSERT_FALSE(hash.contains(1));
+    ASSERT_FALSE(hash.contains(2));
+    ASSERT_FALSE(hash.contains(3));
 }
 
 TEST(HashTableTest, InsertAndContains) {
@@ -45,6 +43,7 @@ TEST(HashTableTest, InsertOrAssign) {
 
     hash.insert_or_assign(2, "NewTwo");
     ASSERT_EQ(hash.count(2), 1);
+    ASSERT_EQ(*hash.search(2), "NewTwo");
     ASSERT_EQ(hash.count(4), 0);
 }
 
@@ -59,6 +58,9 @@ TEST(HashTableTest, CopyConstructor) {
     ASSERT_TRUE(hash2.contains(1));
     ASSERT_TRUE(hash2.contains(2));
     ASSERT_TRUE(hash2.contains(3));
+    ASSERT_EQ(*hash2.search(1), "One");
+    ASSERT_EQ(*hash2.search(2), "Two");
+    ASSERT_EQ(*hash2.search(3), "Three");
 }
 
 TEST(HashTableTest, AssignmentOperator) {
@@ -73,6 +75,9 @@ TEST(HashTableTest, AssignmentOperator) {
     ASSERT_TRUE(hash2.contains(1));
     ASSERT_TRUE(hash2.contains(2));
     ASSERT_TRUE(hash2.contains(3));
+    ASSERT_EQ(*hash2.search(1), "One");
+    ASSERT_EQ(*hash2.search(2), "Two");
+    ASSERT_EQ(*hash2.search(3), "Three");
 }
 
 TEST(HashTableTest, Print) {
@@ -99,7 +104,8 @@ TEST(HashTableTest, Count) {
 }
 
 TEST(HashTableTest, get_stat) {
-    for (auto i = 25; i < 476; i += 50) {
+    for (size_t i = 25; i < 476; i += 50) {
         statistics(i, 26, 100);
     }
 }
+

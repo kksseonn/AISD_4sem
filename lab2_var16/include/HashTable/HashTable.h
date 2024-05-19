@@ -3,176 +3,170 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
+#include <list>
+#include <random>
 
+std::mt19937& getRng() {
+    static std::mt19937 rng{ std::random_device{}() };
+    return rng;
+}
 
-template<typename Key, typename Value>
+int randomInt() {
+    static std::uniform_int_distribution<int> dist(0, 116639);
+    return dist(getRng());
+}
+
+template<typename Key, typename Value, template<typename...> class Container = std::list>
 class HashTable {
     struct Pair {
         Key key;
         Value value;
-        Pair* next;
-        Pair() : next(nullptr) {}
-        Pair(const Key& k, const Value& v) : key(k), value(v), next(nullptr) {}
+        Pair(const Key& k, const Value& v) : key(k), value(v) {}
     };
 
-    std::vector<Pair*> _data;
-    size_t capacity;
+    std::vector<Container<Pair>> _data;
+    size_t _size;
 
     size_t hash(const Key& key) const {
-        return std::hash<Key>{}(key) % capacity;
+        return key % _data.size();
     }
 
-    Pair* search(const Key& key) {
-        size_t index = hash(key);
-        Pair* current = _data[index];
-        while (current) {
-            if (current->key == key)
-                return current;
-            current = current->next;
+    void grow() {
+        std::vector<Container<Pair>> new_data(_data.size() * 2);
+        for (const auto& bucket : _data) {
+            for (const auto& pair : bucket) {
+                size_t new_index = pair.key % new_data.size();
+                new_data[new_index].emplace_back(pair.key, pair.value);
+            }
         }
-        return nullptr;
+        _data.swap(new_data);
     }
 
 public:
-    HashTable(size_t size) : capacity(size) {
+    HashTable(size_t size) : _size(0) {
         if (size == 0)
             throw std::invalid_argument("Size must be greater than 0");
         _data.resize(size);
     }
 
-    HashTable(size_t size, const std::vector<std::pair<Key, Value>>& values) : HashTable(size) {
-        for (const auto& pair : values) {
-            insert(pair.first, pair.second);
+    HashTable(size_t size, size_t count) : HashTable(size) {
+        for (size_t i = 0; i < count; ++i) {
+            insert(randomInt(), randomInt());
         }
     }
 
-    HashTable(const HashTable& other) : capacity(other.capacity), _data(other._data.size()) {
-        for (size_t i = 0; i < other._data.size(); ++i) {
-            Pair* current = other._data[i];
-            while (current) {
-                insert(current->key, current->value);
-                current = current->next;
+    HashTable(const HashTable& other) : _size(other._size), _data(other._data.size()) {
+        for (const auto& bucket : other._data) {
+            for (const auto& pair : bucket) {
+                insert(pair.key, pair.value);
             }
         }
     }
 
-    ~HashTable() {
-        for (size_t i = 0; i < _data.size(); ++i) {
-            Pair* current = _data[i];
-            while (current) {
-                Pair* temp = current;
-                current = current->next;
-                delete temp;
-            }
-        }
-    }
+    ~HashTable() = default;
 
     HashTable& operator=(const HashTable& other) {
         if (this != &other) {
-            capacity = other.capacity;
             _data.clear();
+            _size = other._size;
             _data.resize(other._data.size());
-            for (size_t i = 0; i < other._data.size(); ++i) {
-                Pair* current = other._data[i];
-                while (current) {
-                    insert(current->key, current->value);
-                    current = current->next;
+            for (const auto& bucket : other._data) {
+                for (const auto& pair : bucket) {
+                    insert(pair.key, pair.value);
                 }
             }
         }
         return *this;
     }
 
-    void print() {
+    void print() const {
         for (size_t i = 0; i < _data.size(); ++i) {
-            Pair* current = _data[i];
-            while (current) {
-                std::cout << current->key << ": " << current->value << std::endl;
-                current = current->next;
+            if (_data[i].empty()) {
+                std::cout << "Bucket " << i << " is empty" << std::endl;
+            }
+            else {
+                for (const auto& pair : _data[i]) {
+                    std::cout << "Bucket " << i << ": " << pair.key << ": " << pair.value << std::endl;
+                }
             }
         }
     }
 
     void insert(const Key& key, const Value& value) {
+        if (static_cast<double>(_size) / _data.size() > 0.6) {
+            grow();
+        }
         size_t index = hash(key);
-        Pair* newNode = new Pair(key, value);
-        newNode->next = _data[index];
-        _data[index] = newNode;
+        _data[index].emplace_back(key, value);
+        ++_size;
     }
 
     void insert_or_assign(const Key& key, const Value& value) {
         size_t index = hash(key);
-        Pair* current = _data[index];
-        while (current) {
-            if (current->key == key) {
-                current->value = value;
+        for (auto& pair : _data[index]) {
+            if (pair.key == key) {
+                pair.value = value;
                 return;
             }
-            current = current->next;
         }
         insert(key, value);
     }
 
-    bool contains(const Key& key) {
+    bool contains(const Key& key) const {
         return search(key) != nullptr;
+    }
+
+    Value* search(const Key& key) const {
+        size_t index = hash(key);
+        for (const auto& pair : _data[index]) {
+            if (pair.key == key) {
+                return const_cast<Value*>(&pair.value); // const_cast чтобы вернуть неконстантный указатель
+            }
+        }
+        return nullptr;
     }
 
     bool erase(const Key& key) {
         size_t index = hash(key);
-        Pair* current = _data[index];
-        Pair* prev = nullptr;
-        while (current) {
-            if (current->key == key) {
-                if (prev)
-                    prev->next = current->next;
-                else
-                    _data[index] = current->next;
-                delete current;
-                return true;
-            }
-            prev = current;
-            current = current->next;
+        auto& bucket = _data[index];
+        auto it = std::remove_if(bucket.begin(), bucket.end(), [&key](const Pair& pair) {
+            return pair.key == key;
+            });
+        if (it != bucket.end()) {
+            bucket.erase(it, bucket.end());
+            --_size;
+            return true;
         }
         return false;
     }
 
-    int count(const Key& key) {
-        Pair* current = search(key);
-        return current ? 1 : 0;
+    int count(const Key& key) const {
+        return search(key) ? 1 : 0;
     }
 
     size_t countCollisions() const {
         size_t collisionCount = 0;
         for (const auto& bucket : _data) {
-            if (bucket) {
-                size_t bucketSize = 0;
-                Pair* current = bucket;
-                while (current->next) {
-                    ++bucketSize;
-                    current = current->next;
-                }
-                if (bucketSize > 0)
-                    ++collisionCount;
+            if (bucket.size() > 1) {
+                collisionCount += bucket.size() - 1;
             }
         }
         return collisionCount;
     }
 };
-
-size_t lcg() {
-    static size_t x = 0;
-    x = (1021 * x + 24631) % 116640;
-    return x;
-}
-
 void statistics(const size_t table_size, const size_t count_nodes, const size_t numExperiments) {
-    size_t sum = 0;
+    size_t totalCollisions = 0;
+    size_t experimentsWithCollisions = 0;
     for (size_t i = 0; i < numExperiments; ++i) {
         HashTable<int, int> hash_table(table_size);
         for (size_t j = 0; j < count_nodes; ++j) {
-            hash_table.insert(lcg(), lcg());
+            hash_table.insert(randomInt(), randomInt());
         }
-        sum += hash_table.countCollisions();
+        size_t collisions = hash_table.countCollisions();
+        totalCollisions += collisions;
+        if (collisions > 0) {
+            ++experimentsWithCollisions;
+        }
     }
-    std::cout << "size=" << table_size << "    average count of collisions=" << sum / numExperiments << "\n";
+    std::cout << "size=" << table_size << " experiments with collisions=" << experimentsWithCollisions << "\n";
 }
