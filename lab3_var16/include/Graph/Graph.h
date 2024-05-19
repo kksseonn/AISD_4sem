@@ -15,6 +15,13 @@ public:
 private:
     std::unordered_set<Vertex> _vertices;
     std::unordered_map<Vertex, std::vector<Edge>> _edges;
+
+    std::unordered_set<Vertex> vertices() const {
+        return _vertices;
+    }
+    std::vector<Edge> edges(const Vertex& vertex) {
+        return _edges[vertex];
+    }
 public:
     // проверка-добавление-удаление вершин
     bool has_vertex(const Vertex& v) const {
@@ -43,11 +50,6 @@ public:
 
         return true;
     }
-
-    std::vector<Vertex> vertices() const {
-        return std::vector<Vertex>(_vertices.begin(), _vertices.end());
-    }
-
 
     //проверка-добавление-удаление ребер
     void add_edge(const Vertex& from, const Vertex& to, const Distance& d) {
@@ -104,14 +106,25 @@ public:
         const auto& edges = _edges.at(e.from);
         return std::find(edges.begin(), edges.end(), e) != edges.end();
     }
+    size_t order() const {
+        return _vertices.size();
+    }
+    size_t degree(const Vertex& v) const {
+        if (!has_vertex(v)) {
+            throw std::invalid_argument("Vertex does not exist in the graph");
+        }
+        size_t degree = 0;
+        for (const auto& pair : _edges) {
+            for (const auto& edge : pair.second) {
+                if (edge.from == v || edge.to == v) {
+                    ++degree;
+                }
+            }
+        }
+        return degree;
+    }
 };
-    ////получение всех ребер, выходящих из вершины
-    //std::vector<Edge> edges(const Vertex& vertex);
-
-    //size_t order() const; //порядок 
-    //size_t degree(const Vertex& v) const; //степень вершины
-
-
+    
     ////поиск кратчайшего пути
     //std::vector<Edge> shortest_path(const Vertex& from,
     //    const Vertex& to) const;
