@@ -93,10 +93,15 @@ public:
     }
 
     void insert(const Key& key, const Value& value) {
+        size_t index = hash(key);
+        for (const auto& pair : _data[index]) {
+            if (pair.key == key) {
+                throw std::invalid_argument("Key already exists");
+            }
+        }
         if (static_cast<double>(_size) / _data.size() > 0.6) {
             grow();
         }
-        size_t index = hash(key);
         _data[index].emplace_back(key, value);
         ++_size;
     }
@@ -154,13 +159,19 @@ public:
         return collisionCount;
     }
 };
-void statistics(const size_t table_size, const size_t count_nodes, const size_t numExperiments) {
+void statistics(size_t table_size, size_t count_nodes, size_t numExperiments) {
     size_t totalCollisions = 0;
     size_t experimentsWithCollisions = 0;
     for (size_t i = 0; i < numExperiments; ++i) {
         HashTable<int, int> hash_table(table_size);
-        for (size_t j = 0; j < count_nodes; ++j) {
-            hash_table.insert(randomInt(), randomInt());
+        size_t inserted = 0;
+        while (inserted < count_nodes) {
+            try {
+                hash_table.insert(randomInt(), randomInt());
+                ++inserted;
+            }
+            catch (const std::invalid_argument& e) {
+            }
         }
         size_t collisions = hash_table.countCollisions();
         totalCollisions += collisions;
