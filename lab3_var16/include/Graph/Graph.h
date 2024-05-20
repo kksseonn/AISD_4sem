@@ -25,12 +25,6 @@ private:
     std::unordered_set<Vertex> _vertices;
     std::unordered_map<Vertex, std::vector<Edge>> _edges;
 
-    std::unordered_set<Vertex> vertices() const {
-        return _vertices;
-    }
-    std::vector<Edge> edges(const Vertex& vertex) {
-        return _edges[vertex];
-    }
 public:
     bool has_vertex(const Vertex& v) const {
         return _vertices.find(v) != _vertices.end();
@@ -56,6 +50,10 @@ public:
                 }), edges.end());
         }
         return true;
+    }
+
+    std::unordered_set<Vertex> vertices() const {
+        return _vertices;
     }
 
     void add_edge(const Vertex& from, const Vertex& to, const Distance& d) {
@@ -84,12 +82,12 @@ public:
     }
 
     bool remove_edge(const Edge& e) {
-        if (!has_vertex(e.from) || !has_vertex(e.to))
-            return false;
-        auto& list = _edges[e.from];
-        auto it = std::find(list.begin(), list.end(), e);
-        if (it != list.end()) {
-            list.erase(it);
+        if (!has_vertex(e.from) || !has_vertex(e.to)) return false;
+
+        auto& edges = _edges[e.from];
+        auto it = std::find(edges.begin(), edges.end(), e);
+        if (it != edges.end()) {
+            edges.erase(it);
             return true;
         }
         return false;
@@ -111,6 +109,14 @@ public:
         }
         const auto& edges = _edges.at(e.from);
         return std::find(edges.begin(), edges.end(), e) != edges.end();
+    }
+
+    std::vector<Edge> edges(const Vertex& vertex) const {
+        auto it = _edges.find(vertex);
+        if (it != _edges.end()) {
+            return it->second;
+        }
+        return {};
     }
 
     size_t order() const {
@@ -145,7 +151,7 @@ public:
             distance[v] = std::numeric_limits<Distance>::infinity();
         }
 
-        distance[from] = Distance(); // начальное расстояние равно 0
+        distance[from] = Distance(); // initial distance is 0
         pq.insert({ Distance(), from });
 
         while (!pq.empty()) {
@@ -166,7 +172,7 @@ public:
 
         std::vector<Edge> path;
         if (distance[to] == std::numeric_limits<Distance>::infinity()) {
-            return path; // Нет пути до вершины `to`
+            return path; // No path to the vertex `to`
         }
 
         for (Vertex at = to; at != from; at = predecessor[at]) {
@@ -207,5 +213,35 @@ public:
             }
         }
         return result;
+    }
+
+    Vertex find_farthest_traumacentre() const {
+        std::unordered_map<Vertex, Distance> total_distance;
+        std::unordered_map<Vertex, size_t> neighbor_count;
+
+        for (const auto& vertex : vertices()) {
+            total_distance[vertex] = Distance();
+            neighbor_count[vertex] = 0;
+
+            for (const auto& edge : edges(vertex)) {
+                total_distance[vertex] += edge.distance;
+                ++neighbor_count[vertex];
+            }
+        }
+
+        Vertex farthest_traumacentre;
+        Distance max_avg_distance = -std::numeric_limits<Distance>::infinity();
+
+        for (const auto& pair : total_distance) {
+            if (neighbor_count[pair.first] > 0) {
+                Distance avg_distance = pair.second / neighbor_count[pair.first];
+                if (avg_distance > max_avg_distance) {
+                    max_avg_distance = avg_distance;
+                    farthest_traumacentre = pair.first;
+                }
+            }
+        }
+
+        return farthest_traumacentre;
     }
 };

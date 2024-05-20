@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 
+// Test if the graph correctly identifies whether a vertex exists
 TEST(GraphTest, HasVertex) {
     Graph<int> g;
     g.add_vertex(1);
@@ -10,6 +11,7 @@ TEST(GraphTest, HasVertex) {
     EXPECT_FALSE(g.has_vertex(2));
 }
 
+// Test adding a vertex
 TEST(GraphTest, AddVertex) {
     Graph<int> g;
     g.add_vertex(1);
@@ -18,6 +20,7 @@ TEST(GraphTest, AddVertex) {
     EXPECT_THROW(g.add_vertex(1), std::invalid_argument);
 }
 
+// Test removing a vertex
 TEST(GraphTest, RemoveVertex) {
     Graph<int> g;
     g.add_vertex(1);
@@ -28,6 +31,7 @@ TEST(GraphTest, RemoveVertex) {
     EXPECT_FALSE(g.remove_vertex(1));
 }
 
+// Test adding an edge
 TEST(GraphTest, AddEdge) {
     Graph<int> g;
     g.add_vertex(1);
@@ -39,6 +43,7 @@ TEST(GraphTest, AddEdge) {
     EXPECT_THROW(g.add_edge(1, 2, 3.0), std::invalid_argument);
 }
 
+// Test removing an edge
 TEST(GraphTest, RemoveEdge) {
     Graph<int> g;
     g.add_vertex(1);
@@ -52,6 +57,7 @@ TEST(GraphTest, RemoveEdge) {
     EXPECT_FALSE(g.remove_edge(1, 2));
 }
 
+// Test checking for existence of an edge
 TEST(GraphTest, HasEdge) {
     Graph<int> g;
     g.add_vertex(1);
@@ -65,6 +71,7 @@ TEST(GraphTest, HasEdge) {
     EXPECT_FALSE(g.has_edge(1, 3));
 }
 
+// Test getting the number of vertices in the graph
 TEST(GraphTest, Order) {
     Graph<int> g;
     g.add_vertex(1);
@@ -74,6 +81,7 @@ TEST(GraphTest, Order) {
     EXPECT_EQ(g.order(), 3);
 }
 
+// Test computing the degree of a vertex
 TEST(GraphTest, Degree) {
     Graph<int> g;
     g.add_vertex(1);
@@ -91,6 +99,7 @@ TEST(GraphTest, Degree) {
     EXPECT_EQ(g.degree(4), 1);
 }
 
+// Test finding the shortest path using Dijkstra's algorithm
 TEST(GraphTest, ShortestPath) {
     Graph<std::string, double> g;
     g.add_vertex("A");
@@ -123,6 +132,7 @@ TEST(GraphTest, ShortestPath) {
     ASSERT_EQ(path[1].distance, 2.0);
 }
 
+// Test depth-first walk
 TEST(GraphTest, Walk) {
     Graph<int> g;
     g.add_vertex(1);
@@ -138,6 +148,25 @@ TEST(GraphTest, Walk) {
     EXPECT_EQ(walk_result.size(), expected_walk.size());
     EXPECT_TRUE(std::equal(walk_result.begin(), walk_result.end(), expected_walk.begin()));
 
-    // Тест для несуществующей вершины
+    // Test for non-existent vertex
     EXPECT_THROW(g.walk(4), std::invalid_argument);
+}
+
+// Test finding the farthest trauma center
+TEST(GraphTest, FarthestTraumacentre) {
+    Graph<std::string, double> g;
+    g.add_vertex("A");
+    g.add_vertex("B");
+    g.add_vertex("C");
+    g.add_vertex("D");
+    g.add_vertex("E");
+
+    g.add_edge("A", "B", 2.0);
+    g.add_edge("A", "C", 3.0);
+    g.add_edge("B", "D", 1.0);
+    g.add_edge("C", "D", 4.0);
+    g.add_edge("C", "E", 5.0);
+
+    std::string farthest_traumacentre = g.find_farthest_traumacentre();
+    EXPECT_EQ(farthest_traumacentre, "C");
 }
