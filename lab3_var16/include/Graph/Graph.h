@@ -107,7 +107,11 @@ public:
         if (!has_vertex(e.from) || !has_vertex(e.to)) {
             return false;
         }
-        const auto& edges = _edges.at(e.from);
+        auto it = _edges.find(e.from);
+        if (it == _edges.end()) {
+            return false;
+        }
+        const auto& edges = it->second;
         return std::find(edges.begin(), edges.end(), e) != edges.end();
     }
 
@@ -161,6 +165,11 @@ public:
             for (const Edge& e : _edges.at(u)) {
                 Vertex v = e.to;
                 Distance weight = e.distance;
+
+                if (weight < 0) {
+                    throw std::runtime_error("Graph contains an edge with negative weight");
+                }
+
                 if (distance[u] + weight < distance[v]) {
                     pq.erase({ distance[v], v });
                     distance[v] = distance[u] + weight;
@@ -198,17 +207,19 @@ public:
         std::vector<Vertex> result;
 
         stack.push(start_vertex);
-        visited.insert(start_vertex);
 
         while (!stack.empty()) {
             Vertex current = stack.top();
             stack.pop();
-            result.push_back(current);
 
-            for (const auto& edge : _edges.at(current)) {
-                if (visited.find(edge.to) == visited.end()) {
-                    visited.insert(edge.to);
-                    stack.push(edge.to);
+            if (visited.find(current) == visited.end()) {
+                visited.insert(current);
+                result.push_back(current);
+
+                for (const auto& edge : _edges.at(current)) {
+                    if (visited.find(edge.to) == visited.end()) {
+                        stack.push(edge.to);
+                    }
                 }
             }
         }
@@ -220,12 +231,20 @@ public:
         std::unordered_map<Vertex, size_t> neighbor_count;
 
         for (const auto& vertex : vertices()) {
-            total_distance[vertex] = Distance();
-            neighbor_count[vertex] = 0;
+            if (total_distance.find(vertex) != total_distance.end()) {
+                continue;
+            }
 
-            for (const auto& edge : edges(vertex)) {
-                total_distance[vertex] += edge.distance;
-                ++neighbor_count[vertex];
+            std::vector<Vertex> component = walk(vertex);
+
+            for (const Vertex& v : component) {
+                total_distance[v] = Distance();
+                neighbor_count[v] = 0;
+
+                for (const auto& edge : edges(v)) {
+                    total_distance[v] += edge.distance;
+                    ++neighbor_count[v];
+                }
             }
         }
 
@@ -233,15 +252,19 @@ public:
         Distance max_avg_distance = -std::numeric_limits<Distance>::infinity();
 
         for (const auto& pair : total_distance) {
-            if (neighbor_count[pair.first] > 0) {
-                Distance avg_distance = pair.second / neighbor_count[pair.first];
+
+            const Vertex& vertex = pair.first;
+            Distance total_dist = pair.second;
+
+            if (neighbor_count[vertex] > 0) {
+                Distance avg_distance = total_dist / neighbor_count[vertex];
+
                 if (avg_distance > max_avg_distance) {
                     max_avg_distance = avg_distance;
-                    farthest_traumacentre = pair.first;
+                    farthest_traumacentre = vertex;
                 }
             }
         }
-
         return farthest_traumacentre;
     }
 };
